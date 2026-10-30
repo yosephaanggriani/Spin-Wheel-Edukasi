@@ -1,0 +1,1678 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Spin Wheel Edukasi Sekolah Dasar</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Nunito:wght@700;800;900&display=swap" rel="stylesheet">
+  <style>
+    body {
+      font-family: 'Fredoka', 'Nunito', sans-serif;
+      user-select: none;
+      -webkit-user-select: none;
+      touch-action: manipulation;
+    }
+    .text-shadow-lg {
+      text-shadow: 3px 3px 0px rgba(0,0,0,0.2);
+    }
+    /* Custom Pop-in Animations */
+    @keyframes popIn {
+      0% { transform: scale(0.7); opacity: 0; }
+      80% { transform: scale(1.05); opacity: 1; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    .animate-pop {
+      animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+    }
+    @keyframes bounceSlow {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    .animate-bounce-slow {
+      animation: bounceSlow 2s infinite ease-in-out;
+    }
+    /* Hardware GPU acceleration for smooth spinning */
+    #spinner-canvas {
+      will-change: transform;
+      touch-action: manipulation;
+    }
+    /* Custom scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+      border-radius: 8px;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #cbd5e1;
+      border-radius: 8px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #94a3b8;
+    }
+
+    /* Ghibli-inspired Scenic Countryside Background */
+    .ghibli-bg {
+      background-color: #e0f2fe;
+      background-image: 
+        /* Sun glow & sky gradient */
+        radial-gradient(circle at 75% 18%, rgba(254, 240, 138, 0.6) 0%, rgba(254, 240, 138, 0) 35%),
+        linear-gradient(to bottom, #7dd3fc 0%, #bae6fd 30%, #e0f2fe 55%, #86efac 55%, #4ade80 70%, #22c55e 100%),
+        /* Distant mountain silhouettes */
+        radial-gradient(ellipse at 20% 56%, #38bdf8 0%, #38bdf8 25%, transparent 26%),
+        radial-gradient(ellipse at 50% 58%, #0ea5e9 0%, #0ea5e9 30%, transparent 31%),
+        radial-gradient(ellipse at 80% 55%, #0284c7 0%, #0284c7 22%, transparent 23%);
+      background-size: 100% 100%, 100% 100%, 1200px 600px, 1400px 600px, 1000px 600px;
+      background-repeat: no-repeat;
+      position: relative;
+    }
+
+    /* SVG Overlay Background for Clouds & Rolling Hills */
+    .ghibli-scenery {
+      position: fixed;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+    }
+  </style>
+</head>
+<body class="ghibli-bg min-h-screen text-slate-800 flex flex-col justify-between overflow-x-hidden relative">
+
+  <!-- SCENIC SVG OVERLAY (Ghibli Cartoon Prairie / Meadows Style) -->
+  <svg class="ghibli-scenery" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="none" viewBox="0 0 1440 900">
+    <defs>
+      <!-- Sky Gradient -->
+      <linearGradient id="skyGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#38bdf8" />
+        <stop offset="40%" stop-color="#7dd3fc" />
+        <stop offset="65%" stop-color="#bae6fd" />
+        <stop offset="100%" stop-color="#f0f9ff" />
+      </linearGradient>
+
+      <!-- Distant Hills -->
+      <linearGradient id="hillDistantGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#38bdf8" />
+        <stop offset="100%" stop-color="#0284c7" />
+      </linearGradient>
+
+      <!-- Mid Hills -->
+      <linearGradient id="hillMidGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#4ade80" />
+        <stop offset="100%" stop-color="#059669" />
+      </linearGradient>
+
+      <!-- Foreground Meadows -->
+      <linearGradient id="meadowGrad" x1="0" y1="0" x2="0" y2="1">
+        <stop offset="0%" stop-color="#86efac" />
+        <stop offset="50%" stop-color="#22c55e" />
+        <stop offset="100%" stop-color="#15803d" />
+      </linearGradient>
+
+      <!-- Soft Cloud Filter -->
+      <filter id="cloudShadow" x="-10%" y="-10%" width="120%" height="120%">
+        <feDropShadow dx="0" dy="8" stdDeviation="6" flood-color="#0284c7" flood-opacity="0.15" />
+      </filter>
+    </defs>
+
+    <!-- Sky Base -->
+    <rect width="1440" height="900" fill="url(#skyGrad)"/>
+
+    <!-- Soft Fluffy Ghibli Clouds -->
+    <g filter="url(#cloudShadow)" fill="#ffffff" opacity="0.92">
+      <!-- Big Cloud Right -->
+      <path d="M 950 210 Q 980 150 1050 160 Q 1110 120 1180 150 Q 1240 130 1290 180 Q 1340 180 1350 230 Q 1380 260 1340 300 Q 1280 320 1000 310 Q 940 280 950 210 Z" />
+      <!-- Cloud Left -->
+      <path d="M 100 180 Q 140 130 200 140 Q 250 100 320 130 Q 370 120 410 160 Q 450 190 420 230 Q 380 260 120 250 Q 80 220 100 180 Z" opacity="0.85" />
+      <!-- Small Cloud Middle -->
+      <path d="M 600 120 Q 630 90 680 100 Q 720 80 760 110 Q 790 120 780 150 Q 750 170 610 160 Q 580 140 600 120 Z" opacity="0.75" />
+    </g>
+
+    <!-- Sun rays overlay -->
+    <circle cx="1150" cy="140" r="180" fill="#fef08a" opacity="0.25" />
+
+    <!-- Distant Mountains Silhouette -->
+    <path d="M -50 560 Q 150 420 380 500 Q 600 380 850 490 Q 1100 390 1320 480 Q 1480 410 1520 560 L 1520 900 L -50 900 Z" fill="url(#hillDistantGrad)" opacity="0.5" />
+
+    <!-- Midground Rolling Hills -->
+    <path d="M -50 630 Q 200 500 500 590 Q 800 470 1120 580 Q 1350 520 1500 610 L 1500 900 L -50 900 Z" fill="url(#hillMidGrad)" opacity="0.85" />
+
+    <!-- Foreground Open Grassland Field -->
+    <path d="M -50 690 Q 250 600 650 670 Q 1050 560 1500 680 L 1500 900 L -50 900 Z" fill="url(#meadowGrad)" />
+
+    <!-- Stylized Grass Detail Lines -->
+    <path d="M 100 740 Q 110 710 120 740 M 115 745 Q 125 715 135 745 M 420 780 Q 430 750 440 780 M 850 720 Q 860 690 870 720 M 1200 760 Q 1210 730 1220 760" stroke="#15803d" stroke-width="4" stroke-linecap="round" fill="none" opacity="0.6" />
+  </svg>
+
+  <!-- APP CONTENT WRAPPER -->
+  <div class="relative z-10 flex flex-col min-h-screen">
+
+  <!-- ================= LAYAR WELCOME (LANDING PAGE UTAMA) ================= -->
+  <div id="welcome-screen" class="fixed inset-0 z-50 bg-sky-900/40 backdrop-blur-sm flex flex-col items-center justify-center p-6 text-white text-center">
+    <div class="animate-pop max-w-xl w-full bg-white/30 backdrop-blur-md p-8 rounded-3xl border-4 border-white/60 shadow-2xl flex flex-col items-center">
+      <div class="text-7xl mb-4 animate-bounce-slow">🎡✨</div>
+      <h1 class="text-3xl md:text-5xl font-black mb-3 text-shadow-lg tracking-wide text-white">Spin Wheel Edukasi</h1>
+      <p class="text-lg md:text-xl font-bold mb-6 text-sky-100">Belajar Seru, Bermain Ceria Bersama Teman-Teman!</p>
+      
+      <button id="btn-skip-welcome" onclick="enterApp()" class="bg-emerald-400 hover:bg-emerald-500 text-emerald-950 font-black text-xl py-3.5 px-10 rounded-2xl shadow-lg hover:shadow-xl transform hover:-translate-y-1 transition duration-200 border-b-4 border-emerald-700 active:translate-y-0">
+        Masuk 🚀
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= LAYAR UTAMA / APP CONTAINER ================= -->
+  <div class="flex-grow flex flex-col max-w-6xl w-full mx-auto p-4 md:p-6">
+    
+    <!-- HEADER -->
+    <header class="flex flex-col sm:flex-row justify-between items-center mb-6 bg-white/80 backdrop-blur-md p-4 rounded-3xl shadow-md border-2 border-white">
+      <div class="flex items-center space-x-3 cursor-pointer" onclick="goToHome()">
+        <span class="text-4xl">🎡</span>
+        <div>
+          <h1 class="text-2xl font-black text-indigo-600 tracking-tight leading-none">Spin Wheel Edukasi</h1>
+          <p class="text-xs font-bold text-slate-500">Belajar Sambil Bermain</p>
+        </div>
+      </div>
+      <div class="mt-3 sm:mt-0 flex items-center space-x-2">
+        <button id="btn-sound-toggle" onclick="toggleMute()" class="px-4 py-2 bg-indigo-100 hover:bg-indigo-200 text-indigo-700 font-bold rounded-2xl transition border border-indigo-200 flex items-center space-x-2">
+          <span id="sound-icon">🔊</span>
+          <span id="sound-text">Suara: On</span>
+        </button>
+        <button id="btn-home-header" onclick="goToHome()" class="hidden px-4 py-2 bg-pink-500 hover:bg-pink-600 text-white font-bold rounded-2xl transition shadow-sm flex items-center space-x-1">
+          <span>🏠 Menu Utama</span>
+        </button>
+      </div>
+    </header>
+
+    <!-- ================= 1. HALAMAN BERANDA (MATA PELAJARAN) ================= -->
+    <main id="home-screen" class="hidden flex-grow flex flex-col justify-center">
+      <div class="text-center mb-8">
+        <h2 class="text-3xl md:text-4xl font-black text-slate-800 mb-2">Pilih Mata Pelajaran</h2>
+        <p class="text-slate-600 font-bold text-base md:text-lg">Klik salah satu mata pelajaran untuk memulai petualangan kuis!</p>
+      </div>
+
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <!-- Bahasa Indonesia -->
+        <div onclick="selectSubject('indonesia')" class="group relative bg-gradient-to-b from-red-400 to-rose-500 rounded-3xl p-6 text-white shadow-xl hover:shadow-2xl transform hover:-translate-y-2 transition duration-300 cursor-pointer border-4 border-white flex flex-col items-center text-center">
+          <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center text-4xl mb-4 group-hover:scale-110 transition">📖</div>
+          <h3 class="text-2xl font-black mb-1">Bahasa Indonesia</h3>
+          <p class="text-xs font-semibold text-red-100">Membaca, Tata Bahasa & Kosakata</p>
+          <div class="mt-4 px-4 py-1.5 bg-white text-red-600 rounded-full font-black text-xs shadow-md">Mainkan! 🚀</div>
+        </div>
+
+        <!-- PPKn -->
+        <div onclick="selectSubject('ppkn')" class="group relative bg-gradient-to-b from-amber-400 to-orange-500 rounded-3xl p-6 text-white shadow-xl hover:shadow-2xl transform hover:-translate-y-2 transition duration-300 cursor-pointer border-4 border-white flex flex-col items-center text-center">
+          <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center text-4xl mb-4 group-hover:scale-110 transition">🦅</div>
+          <h3 class="text-2xl font-black mb-1">PPKn</h3>
+          <p class="text-xs font-semibold text-amber-100">Pancasila & Kewarganegaraan</p>
+          <div class="mt-4 px-4 py-1.5 bg-white text-orange-600 rounded-full font-black text-xs shadow-md">Mainkan! 🚀</div>
+        </div>
+
+        <!-- Matematika -->
+        <div onclick="selectSubject('matematika')" class="group relative bg-gradient-to-b from-sky-400 to-blue-600 rounded-3xl p-6 text-white shadow-xl hover:shadow-2xl transform hover:-translate-y-2 transition duration-300 cursor-pointer border-4 border-white flex flex-col items-center text-center">
+          <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center text-4xl mb-4 group-hover:scale-110 transition">📐</div>
+          <h3 class="text-2xl font-black mb-1">Matematika</h3>
+          <p class="text-xs font-semibold text-sky-100">Berhitung, Bangun & Angka</p>
+          <div class="mt-4 px-4 py-1.5 bg-white text-blue-600 rounded-full font-black text-xs shadow-md">Mainkan! 🚀</div>
+        </div>
+
+        <!-- IPAS -->
+        <div onclick="selectSubject('ipas')" class="group relative bg-gradient-to-b from-emerald-400 to-teal-600 rounded-3xl p-6 text-white shadow-xl hover:shadow-2xl transform hover:-translate-y-2 transition duration-300 cursor-pointer border-4 border-white flex flex-col items-center text-center">
+          <div class="w-20 h-20 bg-white/20 rounded-full flex items-center justify-center text-4xl mb-4 group-hover:scale-110 transition">🔬</div>
+          <h3 class="text-2xl font-black mb-1">IPAS</h3>
+          <p class="text-xs font-semibold text-emerald-100">Ilmu Pengetahuan Alam & Sosial</p>
+          <div class="mt-4 px-4 py-1.5 bg-white text-teal-600 rounded-full font-black text-xs shadow-md">Mainkan! 🚀</div>
+        </div>
+      </div>
+    </main>
+
+    <!-- ================= 2. ARENA PERMAINAN & SPIN ================= -->
+    <main id="game-screen" class="hidden flex-grow flex flex-col">
+      
+      <!-- TOP BAR: MAPEL TITLE, MATERI INPUT & SETUP EXPANDER -->
+      <div class="flex flex-col md:flex-row justify-between items-start md:items-center mb-4 bg-white/90 p-4 rounded-3xl shadow border-2 border-white gap-3">
+        <div class="flex-grow max-w-xl">
+          <span id="badge-subject" class="px-3 py-1 bg-indigo-100 text-indigo-700 font-black rounded-xl text-xs uppercase tracking-wider">Mata Pelajaran</span>
+          <h2 id="current-subject-title" class="text-2xl font-black text-slate-800">Nama Mapel</h2>
+          
+          <!-- EDITABLE MATERI INPUT FOR TEACHERS -->
+          <div class="mt-2 flex items-center space-x-2 bg-indigo-50/70 p-1.5 px-3 rounded-2xl border border-indigo-200">
+            <span class="text-xs font-black text-indigo-800 shrink-0">📌 Materi/Bab:</span>
+            <input type="text" id="input-game-materi" onchange="saveGameMateri(this.value)" placeholder="Klik di sini untuk mengisi materi/topik pelajaran..." class="w-full bg-transparent text-xs font-bold text-slate-700 focus:outline-none focus:bg-white focus:px-2 focus:py-0.5 focus:rounded-lg transition">
+          </div>
+        </div>
+        <div class="flex items-center space-x-2 shrink-0 self-end md:self-center">
+          <button onclick="resetScoresOnly()" class="px-3.5 py-2 bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold rounded-2xl text-sm border border-rose-200 transition flex items-center space-x-1" title="Mulai ulang skor kelompok">
+            <span>🔄 Reset Skor</span>
+          </button>
+          <button onclick="toggleSetupPanel()" class="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-2xl text-sm border border-slate-300 transition flex items-center space-x-1">
+            <span>⚙️ Pengaturan Kelompok & Roda</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- PANEL PENGATURAN KELOMPOK & EDIT SOAL (EXPANDABLE) -->
+      <div id="setup-panel" class="hidden mb-6 bg-white/95 backdrop-blur-md p-6 rounded-3xl shadow-xl border-4 border-indigo-100 animate-pop">
+        <h3 class="text-xl font-black text-indigo-900 mb-4 flex items-center gap-2">
+          <span>⚙️</span> Pengaturan Game & Bank Soal
+        </h3>
+        
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6">
+          <!-- Setup Tim & Roda -->
+          <div class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100">
+            <label class="block text-xs font-black text-indigo-900 uppercase tracking-wider mb-2">Jumlah Kelompok (2 - 8)</label>
+            <input type="number" id="input-teams" min="2" max="8" value="3" class="w-full p-2.5 bg-white border border-indigo-200 rounded-xl font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-400">
+          </div>
+
+          <div class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100">
+            <label class="block text-xs font-black text-indigo-900 uppercase tracking-wider mb-2">Jumlah Kolom Roda (4 - 24)</label>
+            <input type="number" id="input-slices" min="4" max="24" value="12" class="w-full p-2.5 bg-white border border-indigo-200 rounded-xl font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-400">
+          </div>
+
+          <div class="bg-indigo-50/50 p-4 rounded-2xl border border-indigo-100">
+            <label class="block text-xs font-black text-indigo-900 uppercase tracking-wider mb-2">Kolom Bonus / Jackpot ⭐</label>
+            <input type="number" id="input-jackpots" min="0" max="6" value="2" class="w-full p-2.5 bg-white border border-indigo-200 rounded-xl font-bold text-slate-800 focus:outline-none focus:ring-2 focus:ring-indigo-400">
+          </div>
+        </div>
+
+        <!-- Editor Soal Kustom -->
+        <div class="bg-slate-50 p-4 rounded-2xl border border-slate-200 mb-6">
+          <div class="flex flex-wrap justify-between items-center mb-3 gap-2">
+            <div>
+              <h4 class="font-black text-slate-800">Daftar Pertanyaan (<span id="editor-subject-name">Mapel</span>)</h4>
+              <p class="text-xs text-slate-500 font-semibold">Guru dapat menambah, mengedit, atau menghapus soal kuis di bawah ini.</p>
+            </div>
+            <div class="flex space-x-2">
+              <button onclick="openAddQuestionModal()" class="px-3 py-1.5 bg-emerald-500 hover:bg-emerald-600 text-white font-bold rounded-xl text-xs shadow-sm transition">
+                ➕ Tambah Soal
+              </button>
+              <button onclick="resetQuestionBankToDefault()" class="px-3 py-1.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl text-xs transition">
+                ↺ Reset Soal Bawaan
+              </button>
+            </div>
+          </div>
+
+          <div id="questions-editor-list" class="max-h-52 overflow-y-auto space-y-2 pr-1">
+            <!-- Dynamic Question List Items -->
+          </div>
+        </div>
+
+        <button onclick="applySetupSettings()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black py-3 rounded-2xl shadow-lg border-b-4 border-indigo-900 transition active:translate-y-0.5">
+          ✅ Terapkan Pengaturan & Reset Roda
+        </button>
+      </div>
+
+      <!-- MAIN GAME GRID (SCOREBOARD & SPINNER WHEEL) -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-6 items-start flex-grow">
+        
+        <!-- LEFT: SCOREBOARD KELOMPOK (5 COLS) -->
+        <div class="lg:col-span-5 bg-white/90 backdrop-blur-md p-5 rounded-3xl shadow-xl border-2 border-white flex flex-col justify-between">
+          <div>
+            <h3 class="text-lg font-black text-slate-800 mb-3 flex items-center gap-2">
+              <span>🏆</span> Papan Skor & Bintang
+            </h3>
+            
+            <div id="teams-scoreboard-list" class="space-y-3 mb-4">
+              <!-- Team cards injected dynamically -->
+            </div>
+          </div>
+
+          <!-- Active Turn Card Indicator -->
+          <div id="active-turn-card" class="bg-gradient-to-r from-indigo-500 to-purple-600 p-4 rounded-2xl text-white shadow-md text-center">
+            <span class="text-xs font-bold uppercase tracking-wider text-indigo-100 block">Giliran Memutar:</span>
+            <span id="active-team-name" class="text-2xl font-black text-shadow-lg">Kelompok 1</span>
+          </div>
+        </div>
+
+        <!-- RIGHT: SPIN CANVAS & SPIN BUTTON (7 COLS) -->
+        <div class="lg:col-span-7 bg-white/90 backdrop-blur-md p-6 rounded-3xl shadow-xl border-2 border-white flex flex-col items-center justify-center relative min-h-[420px]">
+          
+          <!-- SPIN CANVAS CONTAINER -->
+          <div class="relative w-full max-w-[380px] aspect-square flex items-center justify-center">
+            
+            <!-- TOP POINTER ARROW -->
+            <div class="absolute -top-4 z-20 w-0 h-0 border-l-[18px] border-l-transparent border-r-[18px] border-r-transparent border-t-[32px] border-t-rose-600 filter drop-shadow-md"></div>
+            
+            <!-- CANVAS WHEEL -->
+            <canvas id="spinner-canvas" width="400" height="400" class="w-full h-full rounded-full shadow-inner"></canvas>
+            
+            <!-- CENTER SPIN BUTTON -->
+            <button id="btn-spin-center" onclick="spinWheel()" class="absolute z-10 w-20 h-20 bg-gradient-to-tr from-amber-400 to-yellow-300 hover:from-amber-500 hover:to-yellow-400 text-amber-950 font-black rounded-full shadow-2xl border-4 border-white flex items-center justify-center text-lg transform hover:scale-105 active:scale-95 transition">
+              PUTAR!
+            </button>
+          </div>
+
+          <p class="text-xs font-bold text-slate-400 mt-4 text-center">Tekan tombol <span class="text-indigo-600">PUTAR!</span> atau tekan tombol <span class="px-1.5 py-0.5 bg-slate-200 rounded text-slate-700">SPASI</span> pada keyboard.</p>
+        </div>
+      </div>
+    </main>
+
+    <!-- ================= 3. MODAL KUIS PERTANYAAN ================= -->
+    <div id="quiz-modal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+      <div class="bg-white rounded-3xl max-w-xl w-full p-6 md:p-8 shadow-2xl border-4 border-white animate-pop relative flex flex-col">
+        
+        <div class="flex justify-between items-center mb-4">
+          <span id="quiz-team-badge" class="px-3.5 py-1 bg-indigo-100 text-indigo-700 font-black rounded-full text-xs">Kelompok 1</span>
+          <div class="flex items-center space-x-1 text-rose-600 font-black text-sm bg-rose-50 px-3 py-1 rounded-full border border-rose-100">
+            <span>⏱️ Waktu:</span>
+            <span id="quiz-timer">60</span>s
+          </div>
+        </div>
+
+        <!-- QUESTION TEXT -->
+        <h3 id="quiz-question-text" class="text-lg md:text-xl font-black text-slate-800 mb-6 leading-relaxed">
+          Pertanyaan kuis akan tampil di sini?
+        </h3>
+
+        <!-- OPTIONS BUTTONS -->
+        <div id="quiz-options-container" class="space-y-3 mb-6">
+          <!-- Option buttons inserted dynamically -->
+        </div>
+
+        <div class="flex justify-between items-center pt-2 border-t border-slate-100">
+          <button onclick="eliminateOneOption()" class="px-3 py-1.5 bg-amber-100 hover:bg-amber-200 text-amber-800 font-extrabold rounded-xl text-xs transition">
+            💡 Bantuan: Eliminasi 1 Jawaban
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ================= MODAL EDIT SOAL (POPUP EDITOR) ================= -->
+    <div id="edit-question-modal" class="fixed inset-0 z-50 bg-slate-900/75 backdrop-blur-sm hidden flex items-center justify-center p-4">
+      <div class="bg-white rounded-3xl max-w-lg w-full p-6 shadow-2xl border-4 border-white animate-pop">
+        <h3 id="edit-modal-title" class="text-xl font-black text-slate-800 mb-4">Edit Soal Kuis</h3>
+        
+        <input type="hidden" id="edit-q-index" value="-1">
+
+        <div class="space-y-3 mb-6">
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Teks Pertanyaan</label>
+            <textarea id="edit-q-text" rows="2" class="w-full p-2.5 border border-slate-300 rounded-xl font-bold text-slate-800 text-sm focus:ring-2 focus:ring-indigo-400 focus:outline-none"></textarea>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Pilihan Jawaban (A, B, C, D)</label>
+            <div class="grid grid-cols-2 gap-2">
+              <input type="text" id="edit-opt-0" placeholder="Pilihan A" class="p-2 border border-slate-300 rounded-xl font-semibold text-xs text-slate-800">
+              <input type="text" id="edit-opt-1" placeholder="Pilihan B" class="p-2 border border-slate-300 rounded-xl font-semibold text-xs text-slate-800">
+              <input type="text" id="edit-opt-2" placeholder="Pilihan C" class="p-2 border border-slate-300 rounded-xl font-semibold text-xs text-slate-800">
+              <input type="text" id="edit-opt-3" placeholder="Pilihan D" class="p-2 border border-slate-300 rounded-xl font-semibold text-xs text-slate-800">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1">Jawaban Benar</label>
+            <select id="edit-q-answer" class="w-full p-2.5 border border-slate-300 rounded-xl font-bold text-sm text-slate-800">
+              <option value="0">Jawaban A</option>
+              <option value="1">Jawaban B</option>
+              <option value="2">Jawaban C</option>
+              <option value="3">Jawaban D</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex space-x-2">
+          <button onclick="closeEditQuestionModal()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-700 font-black py-2.5 rounded-xl text-sm transition">
+            Batal
+          </button>
+          <button onclick="saveQuestionItem()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-black py-2.5 rounded-xl text-sm shadow transition">
+            Simpan Soal
+          </button>
+        </div>
+      </div>
+    </div>
+
+  <!-- ================= 4. MODAL FEEDBACK JAWABAN (BENAR / SALAH) ================= -->
+  <div id="feedback-modal" class="fixed inset-0 z-50 bg-slate-900/80 backdrop-blur-sm hidden flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl max-w-sm w-full p-6 shadow-2xl text-center border-4 border-white animate-pop flex flex-col items-center">
+      
+      <!-- DYNAMIC SVG STAR CONTAINER -->
+      <div id="feedback-star-container" class="w-36 h-36 mb-2 animate-bounce flex items-center justify-center">
+        <!-- SVG rendered via JavaScript -->
+      </div>
+      
+      <h3 id="feedback-title" class="text-2xl font-black mb-6 text-slate-800">Jawabanmu benar</h3>
+      <p id="feedback-desc" class="hidden"></p>
+      
+      <button onclick="closeFeedbackModal()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-black text-lg py-3 px-6 rounded-2xl shadow-lg border-b-4 border-indigo-950 active:translate-y-0.5 transition flex items-center justify-center gap-2">
+        <span>Lanjut</span>
+        <span>🚀</span>
+      </button>
+    </div>
+  </div>
+
+  <!-- ================= 5. MODAL KEMENANGAN / WINNER SELEBRASI ================= -->
+  <div id="victory-modal" class="fixed inset-0 z-50 bg-slate-900/85 backdrop-blur-md hidden flex items-center justify-center p-4">
+    <!-- CANVAS KONFETI/KEMBANG API -->
+    <canvas id="victory-canvas" class="absolute inset-0 w-full h-full pointer-events-none z-0"></canvas>
+
+    <div class="bg-white rounded-3xl max-w-lg w-full p-8 shadow-2xl text-center border-4 border-yellow-300 animate-pop relative z-10 flex flex-col items-center max-h-[90vh] overflow-y-auto">
+      
+      <div class="text-7xl mb-2 animate-bounce">🏆🎉</div>
+      <span id="victory-badge" class="px-4 py-1 bg-yellow-100 text-yellow-800 font-black rounded-full text-xs uppercase tracking-wider mb-2">Pemenang Utama!</span>
+      
+      <h2 id="winner-team-name" class="text-3xl md:text-4xl font-black text-amber-500 mb-2">Kelompok 1</h2>
+      <p id="victory-desc" class="text-slate-600 font-bold mb-4 text-sm md:text-base">Selamat! Berhasil mengumpulkan 5 Bintang Pertama!</p>
+
+      <!-- DAFTAR URUTAN JUARA (PERINGKAT AKHIR) -->
+      <div id="leaderboard-container" class="w-full mb-6 bg-amber-50/80 rounded-2xl p-4 border border-amber-200 hidden">
+        <h3 class="text-xs font-black uppercase text-amber-900 tracking-wider mb-3 flex items-center justify-center gap-1">
+          <span>🥇</span> Hasil Akhir Peringkat Kuis
+        </h3>
+        <div id="leaderboard-list" class="flex flex-col gap-2">
+          <!-- Dynamic Leaderboard Items -->
+        </div>
+      </div>
+
+      <!-- OPSI DUA TOMBOL -->
+      <div class="flex flex-col sm:flex-row gap-3 w-full">
+        <button id="btn-continue-victory" onclick="continueAfterVictory()" class="flex-1 bg-amber-400 hover:bg-amber-500 text-amber-950 font-black py-3 px-4 rounded-2xl shadow border-b-4 border-amber-600 text-sm transition">
+          ▶️ Lanjutkan Permainan
+        </button>
+        <button id="btn-victory-home" onclick="goToHome()" class="flex-1 bg-slate-200 hover:bg-slate-300 text-slate-800 font-black py-3 px-4 rounded-2xl shadow border-b-4 border-slate-400 text-sm transition">
+          🏠 Kembali ke Beranda
+        </button>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- FOOTER -->
+  <footer class="py-3 text-center text-xs font-semibold text-slate-700 relative z-10 bg-white/40 backdrop-blur-xs rounded-t-xl">
+    <p>© Spin Wheel Edukasi - Media Pembelajaran Interaktif</p>
+  </footer>
+
+  </div>
+
+  <!-- ================= JAVASCRIPT LOGIC & AUDIO ENGINE ================= -->
+  <script>
+    /* AUDIO SYNTHESIS ENGINE (Web Audio API) */
+    let audioCtx = null;
+    let isMuted = false;
+
+    function initAudio() {
+      if (!audioCtx) {
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (AudioContext) {
+          audioCtx = new AudioContext();
+        }
+      }
+      if (audioCtx && audioCtx.state === 'suspended') {
+        audioCtx.resume();
+      }
+    }
+
+    /* SUBJECT MATERI STORAGE ENGINE */
+    let SUBJECT_MATERI = loadSavedMateri();
+
+    function loadSavedMateri() {
+      try {
+        const saved = localStorage.getItem('SPIN_EDU_MATERI');
+        if (saved) return JSON.parse(saved);
+      } catch (e) {
+        console.error('Failed to load materi', e);
+      }
+      return {
+        indonesia: "Akhiran -kan dan -lah",
+        ppkn: "Hak dan Kewajiban",
+        matematika: "Bab 1: Penjumlahan & Perkalian",
+        ipas: "Bab 1: Tumbuhan & Lingkungan"
+      };
+    }
+
+    function saveGameMateri(val) {
+      SUBJECT_MATERI[currentSubjectKey] = val;
+      try {
+        localStorage.setItem('SPIN_EDU_MATERI', JSON.stringify(SUBJECT_MATERI));
+      } catch (e) {
+        console.error('Failed to save materi', e);
+      }
+    }
+
+    function toggleMute() {
+      isMuted = !isMuted;
+      const soundText = document.getElementById('sound-text');
+      const soundIcon = document.getElementById('sound-icon');
+      if (isMuted) {
+        if (soundText) soundText.innerText = 'Suara: Off';
+        if (soundIcon) soundIcon.innerText = '🔇';
+      } else {
+        if (soundText) soundText.innerText = 'Suara: On';
+        if (soundIcon) soundIcon.innerText = '🔊';
+        initAudio();
+        playClickSound();
+      }
+    }
+
+    function playTone(freq, duration, type = 'sine', gainVal = 0.1) {
+      if (isMuted) return;
+      initAudio();
+      if (!audioCtx) return;
+
+      try {
+        const osc = audioCtx.createOscillator();
+        const gain = audioCtx.createGain();
+        osc.type = type;
+        osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        gain.gain.setValueAtTime(gainVal, audioCtx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.0001, audioCtx.currentTime + duration);
+
+        osc.connect(gain);
+        gain.connect(audioCtx.destination);
+
+        osc.start();
+        osc.stop(audioCtx.currentTime + duration);
+      } catch (e) {
+        console.error('Audio playback error', e);
+      }
+    }
+
+    function playClickSound() {
+      playTone(600, 0.08, 'sine', 0.15);
+    }
+
+    function playSpinTickSound() {
+      playTone(800 + Math.random() * 200, 0.04, 'triangle', 0.1);
+    }
+
+    function playCorrectSound() {
+      if (isMuted) return;
+      initAudio();
+      if (!audioCtx) return;
+      
+      const now = audioCtx.currentTime;
+      [523.25, 659.25, 783.99, 1046.50].forEach((freq, idx) => {
+        setTimeout(() => {
+          playTone(freq, 0.2, 'sine', 0.2);
+        }, idx * 90);
+      });
+    }
+
+    function playWrongSound() {
+      if (isMuted) return;
+      initAudio();
+      if (!audioCtx) return;
+
+      [300, 220, 150].forEach((freq, idx) => {
+        setTimeout(() => {
+          playTone(freq, 0.25, 'sawtooth', 0.15);
+        }, idx * 120);
+      });
+    }
+
+    function playWelcomeSound() {
+      if (isMuted) return;
+      initAudio();
+      if (!audioCtx) return;
+
+      [440, 554.37, 659.25, 880].forEach((freq, idx) => {
+        setTimeout(() => {
+          playTone(freq, 0.25, 'sine', 0.15);
+        }, idx * 100);
+      });
+    }
+
+    function playVictorySound() {
+      if (isMuted) return;
+      initAudio();
+      if (!audioCtx) return;
+
+      const notes = [523.25, 659.25, 783.99, 1046.50, 783.99, 1046.50];
+      notes.forEach((freq, idx) => {
+        setTimeout(() => {
+          playTone(freq, 0.3, 'triangle', 0.25);
+        }, idx * 150);
+      });
+    }
+
+    /* DEFAULT QUESTION BANK BACKUP */
+    const DEFAULT_QUESTION_BANK = {
+      indonesia: [
+        { q: "Akhiran pada kata panaskan adalah ....", options: ["-an", "-kan", "-lah", "–i"], answer: 1 },
+        { q: "Kata yang menggunakan akhiran -lah adalah ....", options: ["Panaskan", "Masukkan", "Adukkan", "Potonglah"], answer: 3 },
+        { q: "Perhatikan kalimat berikut!\n“Campurkan tepung dan gula, kemudian ... hingga merata.”\nKata yang tepat adalah ....", options: ["Aduklah", "Adukanlah", "Adukan", "Adukanan"], answer: 0 },
+        { q: "Akhiran -kan pada kata masukkan berfungsi untuk ....", options: ["Menunjukkan tempat", "Menyatakan jumlah", "Memberikan perintah", "Menyatakan waktu"], answer: 2 },
+        { q: "Kalimat yang tepat untuk langkah membuat teh adalah ....", options: ["Masukkan gula ke dalam gelas!", "Masukan gula ke dalam gelas!", "Masuklah gula ke dalam gelas!", "Masuki gula ke dalam gelas!"], answer: 0 },
+        { q: "Perhatikan kalimat berikut!\n“... petunjuk penggunaan alat sebelum mengoperasikannya.”\nKata yang tepat adalah ....", options: ["Bacakan", "Bacalah", "Bacakanlah", "Bacaan"], answer: 1 },
+        { q: "Kata panaskan dan panaslah memiliki perbedaan pada ....", options: ["Jumlah suku kata", "Huruf awal kata", "Akhiran yang digunakan", "Makna dasar kata"], answer: 2 },
+        { q: "Kalimat yang menggunakan akhiran -kan dengan tepat adalah ....", options: ["Cucilah tangan sebelum makan!", "Tuangkan air ke dalam botol!", "Bacalah buku petunjuk!", "Potonglah sayuran menjadi kecil!"], answer: 1 },
+        { q: "Dalam teks prosedur, kalimat “Adukkan adonan hingga rata!” sebaiknya diperbaiki menjadi ....", options: ["Aduklah adonan hingga rata!", "Adukanlah adonan hingga rata!", "Aduki adonan hingga rata!", "Adukanan adonan hingga rata!"], answer: 0 },
+        { q: "Perhatikan langkah berikut!\n“Kupaslah pisang, kemudian ... menjadi beberapa bagian.”\nKata yang tepat adalah ....", options: ["Potonglah", "Potongan", "Memotong", "Pemotong"], answer: 0 },
+        { q: "Kalimat yang bertujuan memberikan instruksi secara langsung adalah ....", options: ["Air itu sudah mendidih.", "Ibu sedang memasak nasi.", "Masukkan beras ke dalam penanak nasi!", "Beras yang digunakan masih baru."], answer: 2 },
+        { q: "Perhatikan kata berikut: siapkan, panaskan, dan tuangkan. Ketiga kata tersebut memiliki ....", options: ["Akhiran yang sama, yaitu -lah", "Akhiran yang sama, yaitu -kan", "Awalan yang sama, yaitu me-", "Makna yang berlawanan"], answer: 1 }
+      ],
+      ppkn: [
+        { q: "Hak adalah sesuatu yang ....", options: ["harus dilakukan dengan penuh tanggung jawab", "harus diterima atau diperoleh seseorang", "boleh diabaikan oleh setiap orang", "hanya dimiliki oleh orang dewasa"], answer: 1 },
+        { q: "Kewajiban adalah sesuatu yang harus ....", options: ["diterima dari orang lain", "dituntut setiap saat", "dilaksanakan dengan tanggung jawab", "diberikan hanya jika diminta"], answer: 2 },
+        { q: "Hubungan antara hak dan kewajiban yang tepat adalah ....", options: ["hak lebih penting daripada kewajiban", "kewajiban hanya berlaku di sekolah", "hak dapat dituntut tanpa melaksanakan kewajiban", "hak dan kewajiban harus dilaksanakan secara seimbang"], answer: 3 },
+        { q: "Contoh hak anak di rumah adalah ....", options: ["mendapatkan kasih sayang dari orang tua", "membersihkan kamar tidur", "membantu orang tua", "merapikan mainan setelah digunakan"], answer: 0 },
+        { q: "Salah satu hak siswa di sekolah adalah ....", options: ["menjaga kebersihan kelas", "menaati tata tertib sekolah", "mengerjakan tugas yang diberikan guru", "memperoleh pembelajaran dari guru"], answer: 3 },
+        { q: "Siswa yang sengaja merusak meja dan kursi sekolah telah ....", options: ["mengabaikan kewajiban menjaga fasilitas sekolah", "menggunakan haknya sebagai siswa", "melaksanakan tata tertib sekolah", "membantu menjaga lingkungan sekolah"], answer: 0 },
+        { q: "Akibat yang mungkin terjadi jika siswa melanggar tata tertib sekolah adalah ....", options: ["memperoleh penghargaan dari guru", "mendapatkan teguran atau sanksi sesuai aturan", "terbebas dari semua kewajiban", "memperoleh hak lebih banyak"], answer: 1 },
+        { q: "Saat guru menjelaskan pelajaran, beberapa siswa berbicara dengan suara keras. Perilaku tersebut dapat ....", options: ["meningkatkan kenyamanan belajar semua siswa", "membantu guru menyampaikan materi", "mengganggu hak teman untuk belajar dengan nyaman", "menunjukkan tanggung jawab siswa"], answer: 2 },
+        { q: "Setiap siswa berhak menyampaikan pendapat saat diskusi. Namun, hak tersebut harus digunakan dengan cara ....", options: ["memaksakan pendapat kepada teman", "berbicara tanpa memperhatikan orang lain", "menolak semua pendapat yang berbeda", "sopan dan menghargai pendapat orang lain"], answer: 3 },
+        { q: "Contoh kewajiban warga di lingkungan masyarakat adalah ....", options: ["menjaga kebersihan lingkungan", "mendapatkan perlindungan keamanan", "menggunakan fasilitas umum", "memperoleh pelayanan masyarakat"], answer: 0 },
+        { q: "Mengapa setiap orang harus menghormati hak orang lain?", options: ["Agar dapat menuntut semua keinginannya", "Agar tidak perlu melaksanakan kewajiban", "Agar memperoleh keuntungan sendiri", "Agar tercipta kehidupan yang tertib dan harmonis"], answer: 3 },
+        { q: "Jika hak dan kewajiban tidak dilaksanakan secara seimbang, kehidupan bersama dapat menjadi ....", options: ["tidak tertib dan mudah menimbulkan konflik", "lebih adil bagi semua orang", "semakin nyaman dan teratur", "bebas dari segala permasalahan"], answer: 0 }
+      ],
+      matematika: [
+        { q: "Hasil dari 15 + 27 adalah...", options: ["40", "42", "45", "32"], answer: 1 },
+        { q: "Hasil dari 8 x 7 adalah...", options: ["48", "54", "56", "64"], answer: 2 },
+        { q: "Bangun datar yang memiliki 3 buah sisi adalah...", options: ["Persegi", "Segitiga", "Lingkaran", "Trapesium"], answer: 1 },
+        { q: "Hasil dari 100 - 45 adalah...", options: ["55", "65", "45", "50"], answer: 0 },
+        { q: "Angka 7 pada bilangan 754 menempati nilai tempat...", options: ["Satuan", "Puluhan", "Ratusan", "Ribuan"], answer: 2 },
+        { q: "Hasil dari 36 : 4 adalah...", options: ["7", "8", "9", "6"], answer: 2 },
+        { q: "Jam menunjukkan jarum pendek di angka 3 dan jarum panjang di angka 12, artinya pukul...", options: ["03.00", "12.03", "03.12", "12.00"], answer: 0 },
+        { q: "Sebuah persegi memiliki panjang sisi 5 cm. Keliling persegi tersebut adalah...", options: ["10 cm", "15 cm", "20 cm", "25 cm"], answer: 2 },
+        { q: "Pecahan 1/2 dibaca...", options: ["Satu tiga", "Satu per dua", "Dua per satu", "Satu per empat"], answer: 1 },
+        { q: "Bilangan genap di bawah ini adalah...", options: ["13", "21", "34", "45"], answer: 2 }
+      ],
+      ipas: [
+        { q: "Tumbuhan hijau membuat makanannya sendiri melalui proses...", options: ["Respirasi", "Fotosintesis", "Adaptasi", "Evolusi"], answer: 1 },
+        { q: "Matahari merupakan sumber energi...", options: ["Listrik", "Terbesar di bumi", "Bunyi", "Gerak"], answer: 1 },
+        { q: "Hewan yang pemakan tumbuhan dinamakan...", options: ["Karnivora", "Herbivora", "Omnivora", "Insektivora"], answer: 1 },
+        { q: "Bagian tumbuhan yang berfungsi menyerap air dari dalam tanah adalah...", options: ["Daun", "Batang", "Akar", "Bunga"], answer: 2 },
+        { q: "Perubahan wujud benda cair menjadi padat dinamakan...", options: ["Mencair", "Membeku", "Menguap", "Menyublim"], answer: 1 },
+        { q: "Alat pernapasan pada ikan adalah...", options: ["Paru-paru", "Insang", "Kulit", "Trakea"], answer: 1 },
+        { q: "Peta adalah gambaran permukaan bumi pada bidang...", options: ["Datar", "Miring", "Bulat", "Kubah"], answer: 0 },
+        { q: "Ibu kota Negara Republik Indonesia saat ini adalah...", options: ["Surabaya", "Bandung", "Jakarta", "Medan"], answer: 2 },
+        { q: "Benda yang dapat menarik benda dari besi dinamakan...", options: ["Kaca", "Magnet", "Plastik", "Kayu"], answer: 1 },
+        { q: "Gaya yang dihasilkan oleh tarikan atau dorongan dinamakan...", options: ["Gaya otot", "Gaya otot & fisik", "Gaya mekanik", "Gaya"], answer: 3 }
+      ]
+    };
+
+    // Load saved bank from localStorage if available
+    function loadSavedQuestionBank() {
+      try {
+        const saved = localStorage.getItem('SPIN_EDU_QUESTIONS');
+        if (saved) {
+          return JSON.parse(saved);
+        }
+      } catch (e) {
+        console.error('Failed to load questions from localStorage', e);
+      }
+      return JSON.parse(JSON.stringify(DEFAULT_QUESTION_BANK));
+    }
+
+    function saveQuestionBankToStorage() {
+      try {
+        localStorage.setItem('SPIN_EDU_QUESTIONS', JSON.stringify(QUESTION_BANK));
+      } catch (e) {
+        console.error('Failed to save questions to localStorage', e);
+      }
+    }
+
+    let QUESTION_BANK = loadSavedQuestionBank();
+
+    /* STATE VARS */
+    let currentSubjectKey = 'indonesia';
+    let currentSubjectTitle = 'Bahasa Indonesia';
+    
+    let teamCount = 3;
+    let sliceCount = 14;
+    let jackpotCount = 2;
+
+    let teams = []; 
+    let currentTeamIndex = 0;
+    
+    let spinnerSlices = []; 
+    let currentRotation = 0; 
+    let isSpinning = false;
+
+    let activeQuiz = null;
+    let quizTimerInterval = null;
+    let quizTimeLeft = 60;
+    let currentSliceIndexBeingAnswered = -1;
+
+    let winnersList = [];
+    let fireworksAnimationFrame = null;
+
+    // Slice Color Palette
+    const sliceColors = [
+      "#f43f5e", "#3b82f6", "#10b981", "#f59e0b", 
+      "#8b5cf6", "#ec4899", "#06b6d4", "#84cc16",
+      "#d97706", "#6366f1", "#14b8a6", "#a855f7"
+    ];
+
+    const teamColors = [
+      { bg: "bg-rose-50 border-rose-200", text: "text-rose-700", badge: "bg-rose-500" },
+      { bg: "bg-sky-50 border-sky-200", text: "text-sky-700", badge: "bg-sky-500" },
+      { bg: "bg-emerald-50 border-emerald-200", text: "text-emerald-700", badge: "bg-emerald-500" },
+      { bg: "bg-amber-50 border-amber-200", text: "text-amber-700", badge: "bg-amber-500" },
+      { bg: "bg-purple-50 border-purple-200", text: "text-purple-700", badge: "bg-purple-500" },
+      { bg: "bg-pink-50 border-pink-200", text: "text-pink-700", badge: "bg-pink-500" },
+      { bg: "bg-indigo-50 border-indigo-200", text: "text-indigo-700", badge: "bg-indigo-500" },
+      { bg: "bg-teal-50 border-teal-200", text: "text-teal-700", badge: "bg-teal-500" }
+    ];
+
+    /* ================= INIT & WELCOME COUNTDOWN ================= */
+    window.onload = function() {
+      // Audio trigger on first user click anywhere
+      document.body.addEventListener('click', () => { initAudio(); }, { once: true });
+
+      playWelcomeSound();
+
+      // Canvas Window Resize Listener with debounce
+      let resizeTimeout;
+      window.addEventListener('resize', () => {
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(() => {
+          drawSpinner();
+        }, 100);
+      });
+
+      // Keyboard Controls (Spacebar / Enter)
+      window.addEventListener('keydown', (e) => {
+        if (e.code === 'Space') {
+          const quizModalHidden = document.getElementById('quiz-modal').classList.contains('hidden');
+          const homeHidden = document.getElementById('home-screen').classList.contains('hidden');
+          if (quizModalHidden && !homeHidden && !isSpinning) {
+            e.preventDefault();
+            spinWheel();
+          }
+        }
+      });
+    };
+
+    /* ================= ROUTING & NAVIGATION ================= */
+    function enterApp() {
+      playClickSound();
+      document.getElementById('welcome-screen').classList.add('hidden');
+      document.getElementById('home-screen').classList.remove('hidden');
+      document.getElementById('home-screen').classList.add('animate-pop');
+    }
+
+    function goToHome() {
+      playClickSound();
+      
+      // Stop fireworks and reset any active timers/modals
+      stopFireworksCanvas();
+      if (quizTimerInterval) {
+        clearInterval(quizTimerInterval);
+        quizTimerInterval = null;
+      }
+      
+      // Hide all active modals
+      document.getElementById('victory-modal').classList.add('hidden');
+      document.getElementById('quiz-modal').classList.add('hidden');
+      document.getElementById('feedback-modal').classList.add('hidden');
+      document.getElementById('edit-question-modal').classList.add('hidden');
+      document.getElementById('setup-panel').classList.add('hidden');
+
+      // Check if welcome screen was active, else show home screen
+      const welcomeHidden = document.getElementById('welcome-screen').classList.contains('hidden');
+      if (welcomeHidden) {
+        document.getElementById('home-screen').classList.remove('hidden');
+      }
+      
+      document.getElementById('game-screen').classList.add('hidden');
+      document.getElementById('btn-home-header').classList.add('hidden');
+    }
+
+    function selectSubject(subjectKey) {
+      playClickSound();
+      currentSubjectKey = subjectKey;
+      
+      const titles = {
+        indonesia: "Bahasa Indonesia 📖",
+        ppkn: "PPKn 🦅",
+        matematika: "Matematika 📐",
+        ipas: "IPAS 🔬"
+      };
+      currentSubjectTitle = titles[subjectKey] || "Kuis SD";
+      document.getElementById('current-subject-title').innerText = currentSubjectTitle;
+
+      // Update editable Materi field on the game screen
+      document.getElementById('input-game-materi').value = SUBJECT_MATERI[currentSubjectKey] || '';
+
+      document.getElementById('home-screen').classList.add('hidden');
+      document.getElementById('game-screen').classList.remove('hidden');
+      document.getElementById('btn-home-header').classList.remove('hidden');
+
+      // Initialize teams & spinner for this session
+      resetGameData();
+    }
+
+    function toggleSetupPanel() {
+      playClickSound();
+      const panel = document.getElementById('setup-panel');
+      panel.classList.toggle('hidden');
+      if (!panel.classList.contains('hidden')) {
+        renderQuestionsEditorList();
+      }
+    }
+
+    function renderQuestionsEditorList() {
+      const container = document.getElementById('questions-editor-list');
+      const editorSubjectName = document.getElementById('editor-subject-name');
+      if (!container) return;
+
+      if (editorSubjectName) {
+        editorSubjectName.innerText = currentSubjectTitle;
+      }
+
+      container.innerHTML = '';
+      const questions = QUESTION_BANK[currentSubjectKey] || [];
+
+      if (questions.length === 0) {
+        container.innerHTML = `<p class="text-xs text-slate-400 italic">Belum ada soal untuk mata pelajaran ini.</p>`;
+        return;
+      }
+
+      questions.forEach((qObj, idx) => {
+        const item = document.createElement('div');
+        item.className = 'bg-white p-2.5 rounded-xl border border-slate-200 flex justify-between items-center text-xs gap-2';
+        item.innerHTML = `
+          <div class="overflow-hidden">
+            <p class="font-bold text-slate-800 truncate">${idx + 1}. ${qObj.q}</p>
+            <p class="text-[10px] text-slate-500 font-medium">Jawaban: ${qObj.options[qObj.answer] || '-'}</p>
+          </div>
+          <div class="flex items-center space-x-1 flex-shrink-0">
+            <button onclick="openEditQuestionModal(${idx})" class="p-1.5 bg-amber-100 hover:bg-amber-200 text-amber-800 font-bold rounded-lg transition text-[10px]">✏️ Edit</button>
+            <button onclick="deleteQuestionItem(${idx})" class="p-1.5 bg-rose-100 hover:bg-rose-200 text-rose-700 font-bold rounded-lg transition text-[10px]">🗑️</button>
+          </div>
+        `;
+        container.appendChild(item);
+      });
+    }
+
+    function openAddQuestionModal() {
+      playClickSound();
+      document.getElementById('edit-modal-title').innerText = "Tambah Soal Baru";
+      document.getElementById('edit-q-index').value = "-1";
+      document.getElementById('edit-q-text').value = "";
+      document.getElementById('edit-opt-0').value = "";
+      document.getElementById('edit-opt-1').value = "";
+      document.getElementById('edit-opt-2').value = "";
+      document.getElementById('edit-opt-3').value = "";
+      document.getElementById('edit-q-answer').value = "0";
+
+      document.getElementById('edit-question-modal').classList.remove('hidden');
+    }
+
+    function openEditQuestionModal(index) {
+      playClickSound();
+      const qObj = QUESTION_BANK[currentSubjectKey][index];
+      if (!qObj) return;
+
+      document.getElementById('edit-modal-title').innerText = `Edit Soal #${index + 1}`;
+      document.getElementById('edit-q-index').value = index;
+      document.getElementById('edit-q-text').value = qObj.q;
+      document.getElementById('edit-opt-0').value = qObj.options[0] || '';
+      document.getElementById('edit-opt-1').value = qObj.options[1] || '';
+      document.getElementById('edit-opt-2').value = qObj.options[2] || '';
+      document.getElementById('edit-opt-3').value = qObj.options[3] || '';
+      document.getElementById('edit-q-answer').value = qObj.answer;
+
+      document.getElementById('edit-question-modal').classList.remove('hidden');
+    }
+
+    function closeEditQuestionModal() {
+      playClickSound();
+      document.getElementById('edit-question-modal').classList.add('hidden');
+    }
+
+    function saveQuestionItem() {
+      playClickSound();
+      const index = parseInt(document.getElementById('edit-q-index').value);
+      const qText = document.getElementById('edit-q-text').value.trim();
+      const opt0 = document.getElementById('edit-opt-0').value.trim();
+      const opt1 = document.getElementById('edit-opt-1').value.trim();
+      const opt2 = document.getElementById('edit-opt-2').value.trim();
+      const opt3 = document.getElementById('edit-opt-3').value.trim();
+      const answer = parseInt(document.getElementById('edit-q-answer').value);
+
+      if (!qText || !opt0 || !opt1) {
+        showFeedbackModal('Data Tidak Lengkap', 'Mohon isi pertanyaan dan minimal 2 pilihan jawaban pertama!', '⚠️', null);
+        return;
+      }
+
+      const newQObj = {
+        q: qText,
+        options: [opt0, opt1, opt2 || "Jawaban C", opt3 || "Jawaban D"],
+        answer: answer
+      };
+
+      if (!QUESTION_BANK[currentSubjectKey]) {
+        QUESTION_BANK[currentSubjectKey] = [];
+      }
+
+      if (index === -1) {
+        QUESTION_BANK[currentSubjectKey].push(newQObj);
+      } else {
+        QUESTION_BANK[currentSubjectKey][index] = newQObj;
+      }
+
+      closeEditQuestionModal();
+      renderQuestionsEditorList();
+    }
+
+    function deleteQuestionItem(index) {
+      playClickSound();
+      QUESTION_BANK[currentSubjectKey].splice(index, 1);
+      renderQuestionsEditorList();
+    }
+
+    function resetQuestionBankToDefault() {
+      playClickSound();
+      QUESTION_BANK[currentSubjectKey] = JSON.parse(JSON.stringify(DEFAULT_QUESTION_BANK[currentSubjectKey] || []));
+      saveQuestionBankToStorage();
+      renderQuestionsEditorList();
+    }
+
+    /* ================= SETUP & GAME DATA INIT ================= */
+    function applySetupSettings() {
+      playClickSound();
+      teamCount = parseInt(document.getElementById('input-teams').value) || 3;
+      sliceCount = parseInt(document.getElementById('input-slices').value) || 12;
+      jackpotCount = parseInt(document.getElementById('input-jackpots').value) || 0;
+
+      // Validation
+      if (teamCount < 2) teamCount = 2;
+      if (teamCount > 8) teamCount = 8;
+      if (sliceCount < 4) sliceCount = 4;
+      if (sliceCount > 24) sliceCount = 24;
+      if (jackpotCount < 0) jackpotCount = 0;
+      if (jackpotCount >= sliceCount) jackpotCount = sliceCount - 1; 
+
+      // Save question edits permanently
+      saveQuestionBankToStorage();
+
+      resetGameData();
+      document.getElementById('setup-panel').classList.add('hidden');
+    }
+
+    // FUNGSI RESET SKOR TANPA MERUBAH PENGATURAN KELOMPOK
+    function resetScoresOnly() {
+      playClickSound();
+      teams.forEach(t => {
+        t.stars = 0;
+        t.isFinished = false;
+        t.finishRank = 0;
+      });
+      currentTeamIndex = 0;
+      winnersList = [];
+      buildSpinnerSlices();
+      updateScoreboardUI();
+      drawSpinner();
+    }
+
+    // FUNGSI MEMBANGUN SPINNER SLICES
+    function buildSpinnerSlices() {
+      spinnerSlices = [];
+      const questions = QUESTION_BANK[currentSubjectKey] || [];
+      
+      // Shuffle questions copy
+      const shuffledQ = [...questions].sort(() => 0.5 - Math.random());
+      
+      let targetSliceCount = sliceCount;
+      let availableQuestionsCount = targetSliceCount - jackpotCount;
+
+      // Populate slices with questions
+      for (let i = 0; i < availableQuestionsCount; i++) {
+        const qObj = shuffledQ.length > 0 ? shuffledQ[i % shuffledQ.length] : {
+          q: "Soal Tambahan: Berapakah 10 + 10?",
+          options: ["10", "20", "30", "40"],
+          answer: 1
+        };
+
+        spinnerSlices.push({
+          isJackpot: false,
+          label: `Soal ${i + 1}`,
+          color: sliceColors[i % sliceColors.length],
+          question: qObj
+        });
+      }
+
+      // Insert Jackpot slices evenly
+      for (let j = 0; j < jackpotCount; j++) {
+        const jackpotPos = Math.floor((j + 1) * (spinnerSlices.length / (jackpotCount + 1)));
+        spinnerSlices.splice(jackpotPos, 0, {
+          isJackpot: true,
+          label: "⭐ BONUS ⭐",
+          color: "#f59e0b",
+          question: null
+        });
+      }
+    }
+
+    function resetGameData() {
+      // Build Teams
+      teams = [];
+      for (let i = 1; i <= teamCount; i++) {
+        teams.push({
+          id: i,
+          name: `Kelompok ${i}`,
+          stars: 0,
+          isFinished: false,
+          finishRank: 0,
+          colorIndex: (i - 1) % teamColors.length
+        });
+      }
+      currentTeamIndex = 0;
+      winnersList = [];
+
+      // Build Spinner Slices
+      buildSpinnerSlices();
+
+      // Ensure active team is valid
+      ensureActiveTeamValid();
+
+      // Update UI
+      updateScoreboardUI();
+      drawSpinner();
+    }
+
+    function ensureActiveTeamValid() {
+      const activeTeamsLeft = teams.filter(t => !t.isFinished);
+      if (activeTeamsLeft.length === 0) return false;
+
+      let attempts = 0;
+      while (teams[currentTeamIndex].isFinished && attempts < teams.length) {
+        currentTeamIndex = (currentTeamIndex + 1) % teams.length;
+        attempts++;
+      }
+      return true;
+    }
+
+    /* ================= SCOREBOARD & TURN MANAGEMENT ================= */
+    function updateScoreboardUI() {
+      const activeTeamsLeft = teams.filter(t => !t.isFinished);
+      
+      // Active Turn Indicator
+      if (activeTeamsLeft.length > 0) {
+        const currentTeam = teams[currentTeamIndex];
+        document.getElementById('active-team-name').innerText = currentTeam.name;
+        document.getElementById('active-turn-card').classList.remove('opacity-50', 'grayscale');
+      } else {
+        document.getElementById('active-team-name').innerText = "Permainan Selesai!";
+        document.getElementById('active-turn-card').classList.add('opacity-50');
+      }
+
+      // Render Teams List
+      const container = document.getElementById('teams-scoreboard-list');
+      container.innerHTML = '';
+
+      teams.forEach((team, idx) => {
+        const isCurrent = (idx === currentTeamIndex) && !team.isFinished && (activeTeamsLeft.length > 0);
+        const style = teamColors[team.colorIndex];
+
+        // Star indicator elements
+        let starsHTML = '';
+        for (let s = 1; s <= 5; s++) {
+          if (s <= team.stars) {
+            starsHTML += `<span class="text-xl animate-pop">⭐</span>`;
+          } else {
+            starsHTML += `<span class="text-xl opacity-20">⭐</span>`;
+          }
+        }
+
+        // Status Badge if Frozen/Finished
+        let statusBadge = '';
+        if (team.isFinished) {
+          statusBadge = `<span class="px-2 py-0.5 bg-emerald-500 text-white font-black text-[10px] rounded-md tracking-wider">LULUS (Juara ${team.finishRank}) ❄️</span>`;
+        }
+
+        const teamCard = document.createElement('div');
+        teamCard.className = `p-3 rounded-2xl border-2 flex justify-between items-center transition ${style.bg} ${team.isFinished ? 'opacity-60 bg-slate-100 border-slate-300' : (isCurrent ? 'ring-2 ring-indigo-500 scale-[1.02] shadow-md' : 'opacity-85')}`;
+        
+        teamCard.innerHTML = `
+          <div>
+            <div class="flex items-center space-x-2">
+              <span class="w-3 h-3 rounded-full ${style.badge}"></span>
+              <span class="font-black ${style.text} text-base">${team.name}</span>
+              ${statusBadge}
+            </div>
+            <div class="flex space-x-1 mt-1">
+              ${starsHTML}
+            </div>
+          </div>
+          <div class="text-right">
+            <span class="text-2xl font-black ${style.text}">${team.stars}</span>
+            <span class="text-xs font-extrabold text-slate-400 block">/ 5</span>
+          </div>
+        `;
+        container.appendChild(teamCard);
+      });
+    }
+
+    function nextTurn() {
+      const activeTeamsLeft = teams.filter(t => !t.isFinished);
+      if (activeTeamsLeft.length === 0 || spinnerSlices.length === 0) {
+        updateScoreboardUI();
+        drawSpinner();
+        if (spinnerSlices.length === 0) {
+          finishEntireGame();
+        }
+        return;
+      }
+
+      let nextIdx = (currentTeamIndex + 1) % teams.length;
+      let attempts = 0;
+      while (teams[nextIdx].isFinished && attempts < teams.length) {
+        nextIdx = (nextIdx + 1) % teams.length;
+        attempts++;
+      }
+
+      currentTeamIndex = nextIdx;
+      updateScoreboardUI();
+    }
+
+    /* ================= CANVAS SPINNER WHEEL ENGINE ================= */
+    function drawSpinner() {
+      const canvas = document.getElementById('spinner-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      const width = canvas.width;
+      const height = canvas.height;
+      const centerX = width / 2;
+      const centerY = height / 2;
+      const radius = width / 2 - 10;
+
+      ctx.clearRect(0, 0, width, height);
+
+      const activeTeamsLeft = teams.filter(t => !t.isFinished);
+
+      if (spinnerSlices.length === 0 || activeTeamsLeft.length === 0) {
+        ctx.save();
+        ctx.fillStyle = '#475569';
+        ctx.beginPath();
+        ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 22px Fredoka, sans-serif';
+        ctx.textAlign = 'center';
+        
+        if (activeTeamsLeft.length === 0) {
+          ctx.fillText('Semua Kelompok Selesai! 🏆', centerX, centerY - 10);
+        } else {
+          ctx.fillText('Soal Pada Roda Habis! 🎡', centerX, centerY - 10);
+        }
+        ctx.font = 'bold 14px Fredoka, sans-serif';
+        ctx.fillText('Permainan Berakhir', centerX, centerY + 20);
+        ctx.restore();
+        return;
+      }
+
+      const sliceAngle = (Math.PI * 2) / spinnerSlices.length;
+
+      // Draw Slices
+      spinnerSlices.forEach((slice, idx) => {
+        const startAngle = currentRotation + idx * sliceAngle;
+        const endAngle = startAngle + sliceAngle;
+
+        ctx.beginPath();
+        ctx.moveTo(centerX, centerY);
+        ctx.arc(centerX, centerY, radius, startAngle, endAngle);
+        ctx.closePath();
+
+        ctx.fillStyle = slice.color;
+        ctx.fill();
+        ctx.lineWidth = 4;
+        ctx.strokeStyle = '#ffffff';
+        ctx.stroke();
+
+        // Draw Text inside slice
+        ctx.save();
+        ctx.translate(centerX, centerY);
+        ctx.rotate(startAngle + sliceAngle / 2);
+        ctx.textAlign = 'right';
+        ctx.fillStyle = '#ffffff';
+        ctx.font = 'bold 18px Fredoka, sans-serif';
+        ctx.shadowColor = 'rgba(0, 0, 0, 0.4)';
+        ctx.shadowBlur = 4;
+        
+        ctx.fillText(slice.label, radius - 25, 6);
+        ctx.restore();
+      });
+
+      // Outer Ring Border
+      ctx.beginPath();
+      ctx.arc(centerX, centerY, radius, 0, Math.PI * 2);
+      ctx.lineWidth = 8;
+      ctx.strokeStyle = '#ffffff';
+      ctx.stroke();
+    }
+
+    function spinWheel() {
+      const activeTeamsLeft = teams.filter(t => !t.isFinished);
+      if (isSpinning || spinnerSlices.length === 0 || activeTeamsLeft.length === 0) return;
+      
+      playClickSound();
+      isSpinning = true;
+      document.getElementById('btn-spin-center').classList.add('opacity-50', 'cursor-not-allowed');
+
+      const spinDuration = 3500; 
+      const startRot = currentRotation;
+      const extraRounds = 5 + Math.floor(Math.random() * 5); 
+      const randomOffset = Math.random() * Math.PI * 2;
+      const targetRot = startRot + (extraRounds * Math.PI * 2) + randomOffset;
+
+      const startTime = performance.now();
+      let lastAudioTickIndex = -1;
+
+      function animateSpin(now) {
+        const elapsed = now - startTime;
+        const progress = Math.min(elapsed / spinDuration, 1);
+        
+        // Custom smooth cubic ease-out
+        const easeOut = 1 - Math.pow(1 - progress, 3);
+        currentRotation = startRot + (targetRot - startRot) * easeOut;
+
+        const sliceAngle = (Math.PI * 2) / spinnerSlices.length;
+        const currentTickIndex = Math.floor(currentRotation / sliceAngle);
+        if (currentTickIndex !== lastAudioTickIndex) {
+          playSpinTickSound();
+          lastAudioTickIndex = currentTickIndex;
+        }
+
+        drawSpinner();
+
+        if (progress < 1) {
+          requestAnimationFrame(animateSpin);
+        } else {
+          isSpinning = false;
+          document.getElementById('btn-spin-center').classList.remove('opacity-50', 'cursor-not-allowed');
+          onSpinComplete();
+        }
+      }
+
+      requestAnimationFrame(animateSpin);
+    }
+
+    function onSpinComplete() {
+      const numSlices = spinnerSlices.length;
+      if (numSlices === 0) return;
+
+      const sliceAngle = (Math.PI * 2) / numSlices;
+      let normalizedAngle = (currentRotation % (Math.PI * 2) + (Math.PI * 2)) % (Math.PI * 2);
+      const pointerAngle = 1.5 * Math.PI;
+      let winningIndex = Math.floor((pointerAngle - normalizedAngle + Math.PI * 2) % (Math.PI * 2) / sliceAngle);
+
+      winningIndex = (winningIndex + numSlices) % numSlices;
+      const selectedSlice = spinnerSlices[winningIndex];
+
+      if (selectedSlice.isJackpot) {
+        handleJackpotHit(winningIndex);
+      } else {
+        openQuizModal(selectedSlice, winningIndex);
+      }
+    }
+
+    function handleJackpotHit(sliceIndex) {
+      playCorrectSound();
+      const currentTeam = teams[currentTeamIndex];
+      currentTeam.stars++;
+
+      // Hapus kolom Bonus dari roda setelah didapatkan
+      if (sliceIndex >= 0 && sliceIndex < spinnerSlices.length) {
+        spinnerSlices.splice(sliceIndex, 1);
+      }
+
+      showFeedbackModal(
+        'JACKPOT',
+        '',
+        'happy',
+        () => {
+          drawSpinner();
+          checkVictoryState();
+          nextTurn();
+        }
+      );
+    }
+
+    /* ================= KUIS MODAL & TIMER ================= */
+    function openQuizModal(slice, sliceIndex) {
+      if (!slice || !slice.question) return;
+
+      activeQuiz = slice.question;
+      currentSliceIndexBeingAnswered = sliceIndex;
+
+      const currentTeam = teams[currentTeamIndex];
+      document.getElementById('quiz-team-badge').innerText = currentTeam.name;
+      document.getElementById('quiz-question-text').innerText = activeQuiz.q;
+
+      // Render pilihan jawaban
+      const optionsContainer = document.getElementById('quiz-options-container');
+      optionsContainer.innerHTML = '';
+
+      const optionLabels = ['A', 'B', 'C', 'D'];
+      activeQuiz.options.forEach((optText, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'quiz-opt-btn w-full text-left bg-slate-100 hover:bg-indigo-50 border-2 border-slate-200 hover:border-indigo-400 p-3.5 rounded-2xl font-bold text-slate-800 transition flex items-center space-x-3 active:scale-[0.99] text-sm md:text-base';
+        btn.setAttribute('data-option-index', idx);
+        btn.onclick = () => submitAnswer(idx);
+
+        btn.innerHTML = `
+          <span class="w-8 h-8 rounded-xl bg-indigo-600 text-white font-black flex items-center justify-center text-sm shadow-sm flex-shrink-0">${optionLabels[idx]}</span>
+          <span class="flex-grow">${optText}</span>
+        `;
+        optionsContainer.appendChild(btn);
+      });
+
+      // Start Countdown Timer
+      if (quizTimerInterval) clearInterval(quizTimerInterval);
+      quizTimeLeft = 60;
+      document.getElementById('quiz-timer').innerText = quizTimeLeft;
+
+      quizTimerInterval = setInterval(() => {
+        quizTimeLeft--;
+        document.getElementById('quiz-timer').innerText = quizTimeLeft;
+
+        if (quizTimeLeft <= 0) {
+          clearInterval(quizTimerInterval);
+          handleTimeOut();
+        }
+      }, 1000);
+
+      document.getElementById('quiz-modal').classList.remove('hidden');
+    }
+
+    function eliminateOneOption() {
+      playClickSound();
+      if (!activeQuiz) return;
+      
+      const optionButtons = Array.from(document.querySelectorAll('.quiz-opt-btn'));
+      const wrongButtons = optionButtons.filter(btn => {
+        const idx = parseInt(btn.getAttribute('data-option-index'));
+        return idx !== activeQuiz.answer && !btn.disabled;
+      });
+
+      if (wrongButtons.length > 0) {
+        const randomWrongBtn = wrongButtons[Math.floor(Math.random() * wrongButtons.length)];
+        randomWrongBtn.disabled = true;
+        randomWrongBtn.classList.add('opacity-30', 'line-through', 'bg-slate-200');
+        randomWrongBtn.classList.remove('hover:bg-indigo-50');
+      }
+    }
+
+    function submitAnswer(selectedIndex) {
+      if (quizTimerInterval) clearInterval(quizTimerInterval);
+      document.getElementById('quiz-modal').classList.add('hidden');
+
+      const isCorrect = (selectedIndex === activeQuiz.answer);
+      const currentTeam = teams[currentTeamIndex];
+
+      if (isCorrect) {
+        playCorrectSound();
+        currentTeam.stars++;
+
+        if (currentSliceIndexBeingAnswered >= 0) {
+          spinnerSlices.splice(currentSliceIndexBeingAnswered, 1);
+        }
+
+        showFeedbackModal(
+          'Jawabanmu benar',
+          '',
+          'happy',
+          () => {
+            drawSpinner();
+            checkVictoryState();
+            nextTurn();
+          }
+        );
+
+      } else {
+        playWrongSound();
+        showFeedbackModal(
+          'Jawabanmu salah',
+          '',
+          'sad',
+          () => {
+            nextTurn();
+          }
+        );
+      }
+    }
+
+    function handleTimeOut() {
+      document.getElementById('quiz-modal').classList.add('hidden');
+      playWrongSound();
+      showFeedbackModal(
+        'Waktumu habis',
+        '',
+        'sad',
+        () => {
+          nextTurn();
+        }
+      );
+    }
+
+    /* ================= FEEDBACK MODAL ================= */
+    let feedbackCallback = null;
+
+    // SVG graphics for Happy and Sad Stars
+    const HAPPY_STAR_SVG = `
+      <svg class="w-full h-full filter drop-shadow-lg" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <!-- Star Body -->
+        <polygon points="50,5 64,36 98,38 72,61 80,95 50,76 20,95 28,61 2,38 36,36" fill="#facc15" stroke="#eab308" stroke-width="3" stroke-linejoin="round"/>
+        <!-- Happy Curved Eyes -->
+        <path d="M 36 42 Q 41 34 46 42" stroke="#1e293b" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+        <path d="M 54 42 Q 59 34 64 42" stroke="#1e293b" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+        <!-- Cheeks -->
+        <circle cx="33" cy="48" r="4" fill="#f43f5e" opacity="0.6"/>
+        <circle cx="67" cy="48" r="4" fill="#f43f5e" opacity="0.6"/>
+        <!-- Big Smiling Mouth -->
+        <path d="M 38 52 Q 50 67 62 52 Z" fill="#1e293b"/>
+        <!-- Tongue -->
+        <path d="M 44 58 Q 50 65 56 58 Q 50 68 44 58" fill="#f43f5e"/>
+      </svg>
+    `;
+
+    const SAD_STAR_SVG = `
+      <svg class="w-full h-full filter drop-shadow-md" viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+        <!-- Star Body -->
+        <polygon points="50,5 64,36 98,38 72,61 80,95 50,76 20,95 28,61 2,38 36,36" fill="#fcd34d" stroke="#d97706" stroke-width="3" stroke-linejoin="round"/>
+        <!-- Droopy Sad Eyes -->
+        <ellipse cx="40" cy="42" rx="3" ry="4" fill="#334155"/>
+        <ellipse cx="60" cy="42" rx="3" ry="4" fill="#334155"/>
+        <!-- Sad Eyebrows -->
+        <path d="M 34 35 L 44 38" stroke="#334155" stroke-width="2.5" stroke-linecap="round"/>
+        <path d="M 66 35 L 56 38" stroke="#334155" stroke-width="2.5" stroke-linecap="round"/>
+        <!-- Sad Frowning Mouth -->
+        <path d="M 40 58 Q 50 48 60 58" stroke="#334155" stroke-width="3.5" stroke-linecap="round" fill="none"/>
+        <!-- Teardrop -->
+        <path d="M 64 48 Q 67 55 64 58 Q 61 55 64 48 Z" fill="#38bdf8"/>
+      </svg>
+    `;
+
+    function showFeedbackModal(title, desc, type, onCloseFn) {
+      document.getElementById('feedback-title').innerText = title;
+      const container = document.getElementById('feedback-star-container');
+      
+      if (type === 'happy') {
+        container.innerHTML = HAPPY_STAR_SVG;
+      } else {
+        container.innerHTML = SAD_STAR_SVG;
+      }
+
+      feedbackCallback = onCloseFn;
+      document.getElementById('feedback-modal').classList.remove('hidden');
+    }
+
+    function closeFeedbackModal() {
+      playClickSound();
+      document.getElementById('feedback-modal').classList.add('hidden');
+      if (feedbackCallback) {
+        const cb = feedbackCallback;
+        feedbackCallback = null;
+        cb();
+      }
+    }
+
+    /* ================= VICTORY & CELEBRATION ENGINE ================= */
+    function checkVictoryState() {
+      const currentTeam = teams[currentTeamIndex];
+
+      if (currentTeam.stars >= 5 && !currentTeam.isFinished) {
+        winnersList.push(currentTeam.id);
+        currentTeam.isFinished = true;
+        currentTeam.finishRank = winnersList.length;
+
+        triggerVictoryCelebration(currentTeam, false);
+      }
+    }
+
+    // Fungsi jika seluruh soal habis sebelum semua dapat 5 bintang
+    function finishEntireGame() {
+      playVictorySound();
+
+      // Urutkan seluruh kelompok berdasarkan yang sudah finish (juara duluan), 
+      // lalu sisa tim berdasarkan bintang terbanyak
+      const sortedTeams = [...teams].sort((a, b) => {
+        if (a.isFinished && b.isFinished) {
+          return a.finishRank - b.finishRank;
+        }
+        if (a.isFinished) return -1;
+        if (b.isFinished) return 1;
+        return b.stars - a.stars;
+      });
+
+      sortedTeams.forEach((t, index) => {
+        t.finalRank = index + 1;
+      });
+
+      const topWinner = sortedTeams[0];
+      
+      document.getElementById('victory-badge').innerText = "PERMAINAN SELESAI! 🏆";
+      document.getElementById('winner-team-name').innerText = `${topWinner.name} Juara Umum!`;
+      document.getElementById('victory-desc').innerText = "Seluruh kolom soal telah habis. Berikut adalah urutan peringkat akhir berdasarkan perolehan bintang:";
+
+      document.getElementById('btn-continue-victory').classList.add('hidden');
+      renderLeaderboard(sortedTeams);
+      document.getElementById('victory-modal').classList.remove('hidden');
+
+      startFireworksCanvas();
+    }
+
+    function triggerVictoryCelebration(winnerTeam, isFinalGameEnd) {
+      playVictorySound();
+      document.getElementById('winner-team-name').innerText = winnerTeam.name;
+      
+      const rankText = winnerTeam.finishRank === 1 ? 'Juara 1 Utama! 🏆' : `Pemenang Ke-${winnerTeam.finishRank}! 🎉`;
+      
+      document.getElementById('victory-badge').innerText = "Pemenang Bintang! ⭐";
+      document.getElementById('victory-desc').innerText = `Selamat! Berhasil mengumpulkan 5 Bintang! (${rankText})\nKelompok ini akan di-FREEZE dan giliran dilanjutkan oleh kelompok lainnya.`;
+
+      document.getElementById('btn-continue-victory').classList.remove('hidden');
+      document.getElementById('leaderboard-container').classList.add('hidden');
+
+      document.getElementById('victory-modal').classList.remove('hidden');
+      startFireworksCanvas();
+    }
+
+    function renderLeaderboard(sortedTeams) {
+      const container = document.getElementById('leaderboard-list');
+      container.innerHTML = '';
+
+      const medalEmojis = ['🥇', '🥈', '🥉', '🏅', '🎗️', '⭐'];
+
+      sortedTeams.forEach((team, idx) => {
+        const medal = medalEmojis[idx] || '⭐';
+        const rankLabel = `Juara ${idx + 1}`;
+        const style = teamColors[team.colorIndex];
+
+        const row = document.createElement('div');
+        row.className = `flex justify-between items-center p-3 rounded-xl border font-bold text-sm ${style.bg} ${style.text}`;
+        row.innerHTML = `
+          <div class="flex items-center space-x-2">
+            <span class="text-lg">${medal}</span>
+            <span>${team.name}</span>
+            <span class="text-xs opacity-75 font-semibold">(${rankLabel})</span>
+          </div>
+          <div class="flex items-center space-x-1">
+            <span class="text-base font-black">${team.stars}</span>
+            <span>⭐</span>
+          </div>
+        `;
+        container.appendChild(row);
+      });
+
+      document.getElementById('leaderboard-container').classList.remove('hidden');
+    }
+
+    function continueAfterVictory() {
+      playClickSound();
+      stopFireworksCanvas();
+      document.getElementById('victory-modal').classList.add('hidden');
+      
+      updateScoreboardUI();
+      drawSpinner();
+
+      nextTurn();
+    }
+
+    /* Confetti/Fireworks Canvas Effect */
+    function startFireworksCanvas() {
+      const canvas = document.getElementById('victory-canvas');
+      if (!canvas) return;
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+
+      if (fireworksAnimationFrame) {
+        cancelAnimationFrame(fireworksAnimationFrame);
+      }
+
+      const particles = [];
+      const particleColors = ['#f43f5e', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899', '#facc15'];
+
+      for (let i = 0; i < 150; i++) {
+        particles.push({
+          x: Math.random() * canvas.width,
+          y: Math.random() * canvas.height - canvas.height,
+          vx: (Math.random() - 0.5) * 6,
+          vy: Math.random() * 4 + 2,
+          radius: Math.random() * 6 + 2,
+          color: particleColors[Math.floor(Math.random() * particleColors.length)],
+          rotation: Math.random() * 360,
+          rotSpeed: (Math.random() - 0.5) * 8
+        });
+      }
+
+      function animate() {
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        particles.forEach((p) => {
+          p.x += p.vx;
+          p.y += p.vy;
+          p.rotation += p.rotSpeed;
+
+          if (p.y > canvas.height) {
+            p.y = -20;
+            p.x = Math.random() * canvas.width;
+          }
+
+          ctx.save();
+          ctx.translate(p.x, p.y);
+          ctx.rotate((p.rotation * Math.PI) / 180);
+          ctx.beginPath();
+          ctx.fillStyle = p.color;
+          ctx.fillRect(-p.radius, -p.radius, p.radius * 2, p.radius * 1.5);
+          ctx.restore();
+        });
+
+        if (!document.getElementById('victory-modal').classList.contains('hidden')) {
+          fireworksAnimationFrame = requestAnimationFrame(animate);
+        }
+      }
+
+      animate();
+    }
+
+    function stopFireworksCanvas() {
+      if (fireworksAnimationFrame) {
+        cancelAnimationFrame(fireworksAnimationFrame);
+        fireworksAnimationFrame = null;
+      }
+      const canvas = document.getElementById('victory-canvas');
+      if (canvas) {
+        const ctx = canvas.getContext('2d');
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+      }
+    }
+  </script>
+</body>
+</html>
